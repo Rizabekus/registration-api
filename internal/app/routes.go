@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -18,7 +17,6 @@ func Routes(h *handlers.Handlers) {
 	r.HandleFunc("/login", h.Login).Methods("POST")
 	r.HandleFunc("/modify", h.Modify).Methods("POST")
 
-	fmt.Println("http://localhost:8000")
-	loggers.InfoLog.Println("Started the server")
+	loggers.InfoLog.Println("Started the server at http://localhost:8000")
 	log.Fatal(http.ListenAndServe(":8000", r))
 }

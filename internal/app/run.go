@@ -22,6 +22,14 @@ func Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+	err = storage.CreateTables(db)
+	if err != nil {
+		log.Fatal(err)
+	}
 	loggers.InfoLog.Println("Successfully connected to database")
 	storage := storage.StorageInstance(db)
 	service := services.ServiceInstance(storage)
