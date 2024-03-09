@@ -13,6 +13,7 @@ import (
 )
 
 func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
+	loggers.DebugLog.Println("Received a request to Modify")
 	cookie, err := r.Cookie("logged-in")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -21,18 +22,21 @@ func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
 				Error: "No permission to modify",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
+			loggers.DebugLog.Println("Tried to modify without cookie")
 			return
 
 		} else {
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
+			loggers.InfoLog.Println("Internal Server Error: ", err)
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
 			return
 		}
 	}
+	loggers.DebugLog.Println("Received session UUID from user")
 	user_id, err := handler.Service.UserService.GetID(cookie.Value)
 	if err != nil {
 		if err == errortypes.ErrNoUserID {
@@ -40,13 +44,15 @@ func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
 				Field: "You are logged in not properly",
 				Error: "No permission to modify",
 			}
+			loggers.DebugLog.Println("No user with such session")
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 			return
 		} else {
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
+			loggers.InfoLog.Println("Internal Server Error: ", err)
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
 			return
@@ -57,7 +63,7 @@ func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Failed to decode JSON",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
 
@@ -76,17 +82,17 @@ func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-			loggers.InfoLog.Println("Internal Server Error")
+			loggers.InfoLog.Println("Internal Server Error: ", err)
 			return
 		}
 		firstValidationError := validationErrors[0]
 		response := models.ResponseStructure{
 			Field: fmt.Sprintf("Field: %s, Tag: %s\n", firstValidationError.Field(), firstValidationError.Tag()),
-			Error: err.Error(),
+			Error: "",
 		}
 
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
@@ -99,11 +105,13 @@ func (handler *Handlers) Modify(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Internal Server Error",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-		loggers.InfoLog.Println("Internal Server Error")
+		loggers.InfoLog.Println("Internal Server Error: ", err)
+
 		return
 	}
+	loggers.DebugLog.Println("Successfully modified some user data")
 }

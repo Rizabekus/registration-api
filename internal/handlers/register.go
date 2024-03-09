@@ -17,7 +17,7 @@ func (handler *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Failed to decode JSON",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
 
@@ -33,7 +33,7 @@ func (handler *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
@@ -43,12 +43,12 @@ func (handler *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 		firstValidationError := validationErrors[0]
 		response := models.ResponseStructure{
 			Field: fmt.Sprintf("Field: %s, Tag: %s\n", firstValidationError.Field(), firstValidationError.Tag()),
-			Error: err.Error(),
+			Error: "",
 		}
 
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
 
-		loggers.InfoLog.Println("Validation Error")
+		loggers.InfoLog.Println("Validation Error", err)
 		return
 	}
 	loggers.DebugLog.Println("Validated the data", newUser)
@@ -56,13 +56,14 @@ func (handler *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Internal Server Error",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-		loggers.InfoLog.Println("Internal Server Error")
+		loggers.InfoLog.Println("Failed to check user existence: ", err)
 		return
 	}
+
 	if exists {
 		response := models.ResponseStructure{
 			Field: "User already exists",
@@ -71,18 +72,19 @@ func (handler *Handlers) Register(w http.ResponseWriter, r *http.Request) {
 
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
 
-		loggers.InfoLog.Println("Validation Error")
+		loggers.InfoLog.Println("User does exist")
 		return
 	}
+	loggers.DebugLog.Println("User does not exist")
 	err = handler.Service.UserService.AddUser(newUser)
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Internal Server Error",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-		loggers.InfoLog.Println("Internal Server Error")
+		loggers.InfoLog.Println("Failed to add user: ", err)
 		return
 	}
 	loggers.InfoLog.Println("Successfully registered a user")

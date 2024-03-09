@@ -19,7 +19,7 @@ func (handler *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response := models.ResponseStructure{
 			Field: "Failed to decode JSON",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusBadRequest)
 
@@ -35,7 +35,7 @@ func (handler *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
@@ -61,11 +61,11 @@ func (handler *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 		response := models.ResponseStructure{
 			Field: "Internal Server Error",
-			Error: err.Error(),
+			Error: "",
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-		loggers.InfoLog.Println("Internal Server Error")
+		loggers.InfoLog.Println("Internal Server Error:", err)
 		return
 	}
 	if !ok {
@@ -75,7 +75,7 @@ func (handler *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-		loggers.InfoLog.Println("Internal Server Error")
+		loggers.DebugLog.Println("Credentials are not found in database")
 		return
 	} else {
 		u2, err := uuid.NewV4()
@@ -83,40 +83,44 @@ func (handler *Handlers) Login(w http.ResponseWriter, r *http.Request) {
 
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-			loggers.InfoLog.Println("Internal Server Error")
+			loggers.InfoLog.Println("Failed to create UUID: ", err)
 			return
 		}
+		loggers.DebugLog.Println("Created UUId instance")
 		UserData, err := handler.Service.UserService.GetUserByEmail(LoginInstance.Email)
 
 		if err != nil {
 
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-			loggers.InfoLog.Println("Internal Server Error")
+			loggers.InfoLog.Println("Internal Server Error: ", err)
 			return
 		}
+		loggers.DebugLog.Println("Got user data")
 		err = handler.Service.UserService.CreateSession(UserData.ID, u2.String())
 		if err != nil {
 			fmt.Println("HERE3")
 			response := models.ResponseStructure{
 				Field: "Internal Server Error",
-				Error: err.Error(),
+				Error: "",
 			}
 			handler.Service.UserService.SendResponse(response, w, http.StatusInternalServerError)
 
-			loggers.InfoLog.Println("Internal Server Error")
+			loggers.InfoLog.Println("Internal Server Error: ", err)
 			return
 		}
+		loggers.DebugLog.Println("Added session into table")
 		cookie := &http.Cookie{Name: "logged-in", Value: u2.String(), Expires: time.Now().Add(365 * 24 * time.Hour)}
 		http.SetCookie(w, cookie)
+		loggers.DebugLog.Println("Session is set")
 		loggers.DebugLog.Println("User successfully is logged-in")
 	}
 
